@@ -55,3 +55,4 @@ packrat/src*/
 .venv
 
 sra_files
+sra_details/*.xml
