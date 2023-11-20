@@ -51,3 +51,7 @@ rsconnect/
 **/~$*.xlsx
 packrat/lib*/
 packrat/src*/
+
+.venv
+
+sra_files

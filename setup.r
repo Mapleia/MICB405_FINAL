@@ -6,5 +6,5 @@ if (!is_packrat_installed) {
 
 library("packrat")
 packrat::init()
-install.packages("tidyverse")
-install.packages("rentrez")
+install.packages("reutils")
+install.packages("languageserver")
