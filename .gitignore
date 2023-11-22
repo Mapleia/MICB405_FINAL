@@ -56,3 +56,6 @@ packrat/src*/
 
 sra_files
 sra_details/*.xml
+
+.vscode
+fasterq.tmp*
