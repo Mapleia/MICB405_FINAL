@@ -5,6 +5,4 @@ if (!is_packrat_installed) {
 }
 
 library("packrat")
-packrat::init()
-install.packages("reutils")
-install.packages("languageserver")
+packrat::restore()

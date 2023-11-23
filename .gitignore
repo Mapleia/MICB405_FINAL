@@ -59,3 +59,7 @@ sra_details/*.xml
 
 .vscode
 fasterq.tmp*
+
+test_sra_script
+*_star
+*.zip
