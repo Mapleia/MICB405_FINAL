@@ -17,3 +17,15 @@ Measuring response to metal toxicity in Chlamydomonas.
 3. Run [`./download_sra.sh`](./download_sra.sh) if you are in a bash shell, and [`download_sra.ps1`](./download_sra.ps1) if you are using powershell.
 
     > **Note:** you can change the list of SRA IDs by changing the [`.txt` file](./references/sra_id_list.txt) in the script.
+
+
+## Copy the STAR parsed zip file
+```bash
+# scp [user@]SRC_HOST:]file1 [user@]DEST_HOST:]file2
+user_name="your_user_name"
+src_host="@orca1.bcgsc.ca"
+archive="/projects/micb405/finalprojects2023W1/group11/alignments/PRJNA608616/Cd_exposure_STAR.zip"
+
+dest_arch="Cd_exposure_STAR.zip"
+scp "$user_name$src_host:$archive" $dest_arch
+```
