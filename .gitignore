@@ -50,7 +50,6 @@ rsconnect/
 
 **/~$*.xlsx
 packrat/lib*/
-packrat/src*/
 
 .venv
 

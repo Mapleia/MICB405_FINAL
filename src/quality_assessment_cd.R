@@ -1,6 +1,8 @@
 library(DESeq2)
 library(RColorBrewer)
 library(pheatmap)
+
+
 dds <- readRDS("outputs/dds.rds")
 rld <- rlog(dds)
 plotPCA(rld, intgroup = "condition")
@@ -20,23 +22,23 @@ colours <- colorRampPalette(rev(brewer.pal(9, "Blues")))(255)
 # Generate a heatmap using the pheatmap package
 pheatmap(sample_dist_matrix,
          clustering_distance_rows = sample_dists,
-         clustering_distance_cols = sample_dists, 
+         clustering_distance_cols = sample_dists,
          col = colours)
 resultsNames(dds)
 results(dds, contrast = c("condition", "Cd_6mo", "Cd_3days"))
 
 res <- results(dds, name = "condition_Cd_6mo_vs_Ctrl") %>% as.data.frame()
 
-res_no_NA <- res %>% 
+res_no_NA <- res %>%
   drop_na()
 glimpse(res_no_NA)
 
-res_filtered <- res_no_NA %>% 
+res_filtered <- res_no_NA %>%
   filter(padj <= 0.05)
 
 glimpse(res_filtered)
 
-res_filtered_final <- res_filtered %>% 
+res_filtered_final <- res_filtered %>%
   filter(log2FoldChange <= -1 | log2FoldChange >= 1) %>% # the '|' stand for OR here!
   rownames_to_column("gene_id") %>%
   mutate(up_down = case_when(

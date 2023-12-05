@@ -7,10 +7,13 @@ top10Genes <- dat %>%
   arrange(desc(log2FoldChange)) %>% 
   head(n = 10)
 
+write_csv(top10Genes, "outputs/chlamy_cd_top.csv")
 
 bot10Genes <- dat %>%
   arrange(log2FoldChange) %>% 
   head(n = 10)
+
+write_csv(top10Genes, "outputs/chlamy_cd_bot.csv")
 
 joined_top10 <- bind_rows(top10Genes, bot10Genes) %>%
   mutate(up_down = if_else(log2FoldChange > 0, "UP", "DOWN")) %>%
