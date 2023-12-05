@@ -66,3 +66,6 @@ fasterq.tmp*
 *_star
 *.zip
 
+Cd_exposure_STAR
+packrat
+*.gz
