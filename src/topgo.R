@@ -6,6 +6,51 @@ library(stringr)
 geneID2GO <- readMappings("outputs/chlamy_GOIDs.tsv")
 geneUniverse <- names(geneID2GO)
 # top, bottom order
+
+separate_plot <- function(down_summary, up_summary) {
+  down_GO_filtered <- down_summary %>%
+    mutate(GeneRatio = Significant/Annotated, weight01 = as.numeric(weight01)) %>%
+    filter(weight01 <= 0.05) %>%
+    head(n = 20) %>% 
+    arrange(GeneRatio) %>%
+    mutate(Term = factor(Term))
+  
+  up_GO_filtered <- up_summary %>%
+    mutate(GeneRatio = Significant/Annotated, weight01 = as.numeric(weight01)) %>%
+    filter(weight01 <= 0.05) %>%
+    head(n = 20) %>% 
+    arrange(GeneRatio) %>%
+    mutate(Term = factor(Term))
+  
+  # Now let's extract the order of the term column
+  down_order_term <- down_GO_filtered %>% 
+    pull(Term) # pull() extracts a column as a vector
+  
+  up_order_term <- up_GO_filtered %>% 
+    pull(Term)
+  
+  down_col_point_plot <- down_GO_filtered %>% 
+    ggplot(aes(x= Term, y = GeneRatio, colour = weight01)) +
+    geom_col(width = 0.05) +
+    geom_point(size = 3) +
+    coord_flip() +
+    scale_x_discrete(limits = down_order_term) + 
+    scale_colour_gradient(low = "red", high = "blue")
+  
+  up_col_point_plot <- up_GO_filtered %>% 
+    ggplot(aes(x= Term, y = GeneRatio, colour = weight01)) +
+    geom_col(width = 0.05) +
+    geom_point(size = 3) +
+    coord_flip() +
+    scale_x_discrete(limits = up_order_term) + 
+    scale_colour_gradient(low = "red", high = "blue")
+  
+  results <- vector("list", 2)
+  results[1] <- down_col_point_plot
+  results[2] <- up_col_point_plot
+  return(results)
+}
+
 topgo_parse <- function(top_df, bottom_df, names, limit) {
 
   up_gene_list <- factor(as.integer(geneUniverse %in% top_df$gene_id))
@@ -64,6 +109,63 @@ topgo_parse <- function(top_df, bottom_df, names, limit) {
     mutate(Term = factor(Term)) %>%
     head(n = limit*2)
   
+  down_GO_filtered <- down_summary %>%
+    mutate(GeneRatio = Significant/Annotated, weight01 = as.numeric(weight01)) %>%
+    filter(weight01 <= 0.05) %>%
+    head(n = 20) %>% 
+    arrange(GeneRatio) %>%
+    mutate(Term = factor(Term))
+  
+  up_GO_filtered <- up_summary %>%
+    mutate(GeneRatio = Significant/Annotated, weight01 = as.numeric(weight01)) %>%
+    filter(weight01 <= 0.05) %>%
+    head(n = 20) %>% 
+    arrange(GeneRatio) %>%
+    mutate(Term = factor(Term))
+  
+  # Now let's extract the order of the term column
+  down_order_term <- down_GO_filtered %>% 
+    pull(Term) # pull() extracts a column as a vector
+  
+  up_order_term <- up_GO_filtered %>% 
+    pull(Term)
+  
+  up_col_point_plot <- up_GO_filtered %>% 
+    ggplot(aes(x= Term, y = GeneRatio, colour = weight01)) +
+    geom_col(width = 0.0) +
+    geom_point(size = 3) +
+    coord_flip() +
+    scale_x_discrete(limits = up_order_term) + 
+    scale_colour_gradient(low = "red", high = "blue")
+  
+  ggsave(
+    str_glue("outputs/{name}_plot.png", name=names[1]),
+    up_col_point_plot,
+    height = 8,
+    scale = 3,
+    width = 6,
+    units = "cm",
+    dpi = 400,
+  )
+  
+  down_col_point_plot <- down_GO_filtered %>% 
+    ggplot(aes(x= Term, y = GeneRatio, colour = weight01)) +
+    geom_col(width = 0.0) +
+    geom_point(size = 3) +
+    coord_flip() +
+    scale_x_discrete(limits = down_order_term) + 
+    scale_colour_gradient(low = "red", high = "blue")
+  
+  ggsave(
+    str_glue("outputs/{name}_plot.png", name=names[2]),
+    down_col_point_plot,
+    height = 8,
+    scale = 3,
+    width = 6,
+    units = "cm",
+    dpi = 400,
+  )
+  
   return(joined_GO_filtered_arranged)
 }
 
@@ -79,7 +181,11 @@ topgo_plot <- function(df) {
     scale_x_discrete(limits = order_term_joined) +
     scale_color_gradient(low = "red", high = "blue") +
     theme_light() +
-    labs(x = "GO Term Description", y = "Enrichment Ratio", color = "P-value", size = "Number of Significant Genes") +
+    geom_col(width = 0.0) +
+    labs(x = "GO Term Description",
+         y = "Enrichment Ratio",
+         color = "P-value",
+         size = "Number of Significant Genes") +
     theme(panel.border = element_rect(color = "black"), 
           panel.grid = element_line(colour = "grey96"), 
           strip.background = element_rect(colour = "black")) +
@@ -135,61 +241,12 @@ cd_plots <- topgo_plot(cd_topgo)
 
 ggsave(
   "outputs/cad_topgo_joined_plot.png",
-  cad_plots,
+  cd_plots,
   height = 8,
   scale = 3,
   width = 10,
   units = "cm",
   dpi = 400,
 )
-
-# ===========================================
-
-separate_plot <- function(down_summary, up_summary) {
-  down_GO_filtered <- down_summary %>%
-    mutate(GeneRatio = Significant/Annotated, weight01 = as.numeric(weight01)) %>%
-    filter(weight01 <= 0.05) %>%
-    head(n = 20) %>% 
-    arrange(GeneRatio) %>%
-    mutate(Term = factor(Term))
-  
-  up_GO_filtered <- up_summary %>%
-    mutate(GeneRatio = Significant/Annotated, weight01 = as.numeric(weight01)) %>%
-    filter(weight01 <= 0.05) %>%
-    head(n = 20) %>% 
-    arrange(GeneRatio) %>%
-    mutate(Term = factor(Term))
-  
-  # Now let's extract the order of the term column
-  down_order_term <- down_GO_filtered %>% 
-    pull(Term) # pull() extracts a column as a vector
-  
-  up_order_term <- up_GO_filtered %>% 
-    pull(Term)
-  
-  down_col_point_plot <- down_GO_filtered %>% 
-    ggplot(aes(x= Term, y = GeneRatio, colour = weight01)) +
-    geom_col(width = 0.05) +
-    geom_point(size = 3) +
-    coord_flip() +
-    scale_x_discrete(limits = down_order_term) + 
-    scale_colour_gradient(low = "red", high = "blue")
-  
-  up_col_point_plot <- up_GO_filtered %>% 
-    ggplot(aes(x= Term, y = GeneRatio, colour = weight01)) +
-    geom_col(width = 0.05) +
-    geom_point(size = 3) +
-    coord_flip() +
-    scale_x_discrete(limits = up_order_term) + 
-    scale_colour_gradient(low = "red", high = "blue")
-}
-
-
-
-
-
-
-
-
 
 
