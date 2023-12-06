@@ -2,14 +2,12 @@ library(stringr)
 library(DESeq2)
 library(readxl)
 library(tidyverse)
+library(dplyr)
 
 cd_project_df <-read_excel("references/cd_project.xlsx") %>%
   dplyr::select(sra_id, col_name, type) %>%
-  rename(col_name = "sample") %>%
-  rename(sra_id = "SRR_ID")
-
-
-
+  mutate(sample = col_name, SRR_ID = sra_id) %>%
+  dplyr::select(SRR_ID, col_name, type)
 
 get_all_counts <- function(dir_path) {
   files <- list.files(path=tab_file_dir)
@@ -42,44 +40,64 @@ get_all_counts <- function(dir_path) {
   return (master_typed_df)
 }
 
-tab_file_dir <- "./Cd_exposure_STAR/to_zip/read_counts"
-master_df <- get_all_counts(tab_file_dir)
+tab_file_dir <- "inputs/Cd_exposure_STAR/to_zip/read_counts"
+master_df <- get_all_counts(tab_file_dir) %>%
+  dplyr::filter(type ==  "Ctrl" | type == "Cd_3days") %>%
+  arrange(desc(type), col_name) %>%
+  mutate(sense = as.integer(sense)) %>%
+  dplyr::select(sense, gene_id, col_name, type)
 
-shape_df_deseq2 <- function(input_df, metadata) {
+shape_df_deseq2 <- function(df) {
   # make the column with the sample names
   # the column names for sense instead
-  pivoted_df <- master_df %>%
-    filter(type == "Cd_3days" | type == "Ctrl") %>%
-    dplyr::select(sense, gene_id, sample) %>%
-    pivot_wider(names_from = sample, values_from = sense) %>%
-    as.data.frame()
-
-  # set row.names
-  rownames(pivoted_df) <- pivoted_df[,1]
-  pivoted_df[,1] <- NULL
+  pivoted_df <- df %>%
+    pivot_wider(names_from = col_name, values_from = sense)
 
   # make a matrix
-  dat_matrix<- as.matrix(pivoted_df)
-  # check that they match
-  colnames(dat_matrix) == rownames(metadata)
-
+  cd_frame <- pivoted_df %>% as.data.frame()
+  rownames(cd_frame) <- cd_frame[,1]
+  cd_frame<-cd_frame[,-c(1)]
+  
+  dat_matrix<- as.matrix(cd_frame)
+  
   return (dat_matrix)
 }
 
-cd_matrix <- shape_df_deseq2(master_df, metadata)
+cd_matrix <- shape_df_deseq2(master_df)
+
+cd_matrix_df <- tidyr::as_tibble(cd_matrix, rownames="gene_name") %>%
+  mutate(across(
+    Ctrl_1:Cd_3days_3,
+    ~ as.integer(.x)
+  )) %>%
+  filter(
+    if_any(
+      Ctrl_1:Cd_3days_3,
+      ~.x < 0
+    )
+  )
 
 # create a metadata df
-metadata <- data.frame(row.names = colnames(cd_matrix),
-                       condition = c("1_hour", "1_hour", "12_hour", "12_hour")
-)
+metadata <- master_df %>%
+  select(col_name, type) %>%
+  unique()
 
+metadata <- data.frame(row.names = metadata$col_name,
+             condition = metadata$type)
+
+
+all(colnames(cd_matrix) == rownames(metadata))
 
 dds_matrix <- DESeqDataSetFromMatrix(countData = cd_matrix, #matrix
                                      colData = metadata, #metadata file
-                                     design = ~condition)
+                                     design = ~ condition)
 
 dds_matrix$condition <- relevel(dds_matrix$condition, ref = "Ctrl")
 levels(dds_matrix$condition)
 dds <- DESeq(dds_matrix)
 saveRDS(dds, "outputs/dds.rds")
+# Perform log transformation on our count data
+rld <- rlog(dds)
 
+# Generate a PCA plot with DESeq2's plotPCA function
+plotPCA(rld, intgroup = "condition") 

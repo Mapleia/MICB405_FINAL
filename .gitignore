@@ -58,6 +58,8 @@ inputs/sra_details/*.xml
 inputs/test_sra_script
 inputs/Cd_exposure_STAR
 
+*.tar.gz
+
 .vscode
 fasterq.tmp*
 

@@ -2,15 +2,9 @@ library(tidyverse)
 library(topGO)
 library(stringr)
 
-top_cd_chlamy <- read_csv("outputs/chlamy_cd_top.csv")
-bot_cd_chlamy <- read_csv("outputs/chlamy_cd_bot.csv")
-
-top_lead_chlamy <- read_csv("outputs/topGO/highlead_vs_ctrl.csv")
-bot_lead_chlamy <- read_csv("outputs/topGO/lowlead_vs_ctrl.csv")
-
+# ===========================================
 geneID2GO <- readMappings("outputs/chlamy_GOIDs.tsv")
 geneUniverse <- names(geneID2GO)
-
 # top, bottom order
 topgo_parse <- function(top_df, bottom_df, names, limit) {
 
@@ -70,11 +64,15 @@ topgo_parse <- function(top_df, bottom_df, names, limit) {
     mutate(Term = factor(Term)) %>%
     head(n = limit*2)
   
+  return(joined_GO_filtered_arranged)
+}
+
+topgo_plot <- function(df) {
   # Extract the column order
-  order_term_joined <- joined_GO_filtered_arranged %>% 
+  order_term_joined <- df %>% 
     pull(Term)
   
-  joined_plot <- joined_GO_filtered_arranged %>% 
+  joined_plot <- df %>% 
     ggplot(aes(x= Term, y = GeneRatio, color = weight01)) +
     geom_point(aes(size= Significant)) +
     coord_flip() +
@@ -87,14 +85,30 @@ topgo_parse <- function(top_df, bottom_df, names, limit) {
           strip.background = element_rect(colour = "black")) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2), expand = c(0, 0)) +
     facet_grid(.~ up_down)
-  joined_plot
   
-  return(joined_GO_filtered_arranged)
+  return(joined_plot)
 }
 
+# ===========================================
 names_lead <- c("Chalmy_high_lead", "Chalmy_low_lead")
+lead_chlamy <- read_csv("outputs/topGO/highlead_vs_ctrl.csv") %>%
+  drop_na() %>%
+  filter(padj <= 0.05) %>%
+  filter(log2FoldChange <= -1 | log2FoldChange >= 1) %>% # the '|' stand for OR here!
+  mutate(up_down = case_when(
+    padj < 0.05 & log2FoldChange > 2 ~ "UP", # label genes in the top right quadrant of the volcano plot
+    padj < 0.05 & log2FoldChange < -2 ~ "DOWN", # label genes in the top left quadrant of the volcano plot
+    TRUE ~ "NONE"
+  ))
 
-lead_plots <- topgo_parse(top_lead_chlamy, bot_lead_chlamy, names_lead, 10)
+top_lead_chlamy <- lead_chlamy  %>%
+  filter(up_down == "UP")
+bot_lead_chlamy <- lead_chlamy  %>%
+  filter(up_down == "DOWN")
+
+# bot_lead_chlamy <- read_csv("outputs/topGO/lowlead_vs_ctrl.csv")
+lead_topgo <- topgo_parse(top_lead_chlamy, bot_lead_chlamy, names_lead, 10)
+lead_plots <- topgo_plot(lead_topgo)
 lead_plots
 
 ggsave(
@@ -106,9 +120,18 @@ ggsave(
   units = "cm",
   dpi = 400,
 )
+# ===========================================
+cd_chlamy <- read_csv("outputs/chlamy_cd_results.csv") %>%
+  mutate(up_down = as.factor(up_down))
 
-names_cad <- c("Chalmy_high_cadmium", "Chalmy_low_cadmium")
-cad_plots <- topgo_parse(top_cd_chlamy, bot_cd_chlamy, names_cad, 10)
+top_cd_chlamy <- cd_chlamy  %>%
+  filter(up_down == "UP")
+bot_cd_chlamy <- cd_chlamy  %>%
+  filter(up_down == "DOWN")
+
+names_cd <- c("Chalmy_Cd_up", "Chalmy_Cd_down")
+cd_topgo <- topgo_parse(top_cd_chlamy, bot_cd_chlamy, names_cd, 10)
+cd_plots <- topgo_plot(cd_topgo)
 
 ggsave(
   "outputs/cad_topgo_joined_plot.png",
@@ -119,6 +142,8 @@ ggsave(
   units = "cm",
   dpi = 400,
 )
+
+# ===========================================
 
 separate_plot <- function(down_summary, up_summary) {
   down_GO_filtered <- down_summary %>%

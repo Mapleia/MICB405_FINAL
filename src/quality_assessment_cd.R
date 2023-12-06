@@ -25,9 +25,9 @@ pheatmap(sample_dist_matrix,
          clustering_distance_cols = sample_dists,
          col = colours)
 resultsNames(dds)
-results(dds, contrast = c("condition", "Cd_6mo", "Cd_3days"))
+results(dds, contrast = c("condition", "Cd_3days"))
 
-res <- results(dds, name = "condition_Cd_6mo_vs_Ctrl") %>% as.data.frame()
+res <- results(dds, name = "condition_Cd_3days_vs_Ctrl") %>% as.data.frame()
 
 res_no_NA <- res %>%
   drop_na()
