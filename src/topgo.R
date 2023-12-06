@@ -196,7 +196,7 @@ topgo_plot <- function(df) {
 }
 
 # ===========================================
-names_lead <- c("Chalmy_high_lead", "Chalmy_low_lead")
+names_lead <- c("Chalmy_up_lead", "Chalmy_down_lead")
 lead_chlamy <- read_csv("outputs/topGO/highlead_vs_ctrl.csv") %>%
   drop_na() %>%
   filter(padj <= 0.05) %>%
@@ -212,7 +212,6 @@ top_lead_chlamy <- lead_chlamy  %>%
 bot_lead_chlamy <- lead_chlamy  %>%
   filter(up_down == "DOWN")
 
-# bot_lead_chlamy <- read_csv("outputs/topGO/lowlead_vs_ctrl.csv")
 lead_topgo <- topgo_parse(top_lead_chlamy, bot_lead_chlamy, names_lead, 10)
 lead_plots <- topgo_plot(lead_topgo)
 lead_plots
