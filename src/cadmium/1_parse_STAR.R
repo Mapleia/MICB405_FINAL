@@ -96,8 +96,3 @@ dds_matrix$condition <- relevel(dds_matrix$condition, ref = "Ctrl")
 levels(dds_matrix$condition)
 dds <- DESeq(dds_matrix)
 saveRDS(dds, "outputs/dds.rds")
-# Perform log transformation on our count data
-rld <- rlog(dds)
-
-# Generate a PCA plot with DESeq2's plotPCA function
-plotPCA(rld, intgroup = "condition") 

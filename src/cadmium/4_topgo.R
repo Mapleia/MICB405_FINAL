@@ -2,8 +2,13 @@ library(tidyverse)
 library(topGO)
 library(stringr)
 
-top_cd_chlamy <- read_csv("outputs/chlamy_cd_top.csv")
-bot_cd_chlamy <- read_csv("outputs/chlamy_cd_bot.csv")
+cd_chlamy <- read_csv("outputs/chlamy_cd_results.csv") %>%
+  mutate(up_down = as.factor(up_down))
+
+top_cd_chlamy <- cd_chlamy  %>%
+  filter(up_down == "UP")
+bot_cd_chlamy <- cd_chlamy  %>%
+  filter(up_down == "DOWN")
 
 geneID2GO <- readMappings("outputs/chlamy_GOIDs.tsv")
 geneUniverse <- names(geneID2GO)
@@ -25,7 +30,7 @@ down_summary <- GenTable(down_GO_data,
                          weight01 = down_result,
                          orderBy = "down_result",
                          ranksOf = "down_result",
-                         topNodes = limit)
+                         topNodes = 10)
 
 down_GO_filtered <- down_summary %>%
   mutate(GeneRatio = Significant/Annotated, weight01 = as.numeric(weight01)) %>%
@@ -65,18 +70,7 @@ up_summary <- GenTable(up_GO_data,
                        weight01 = up_result,
                        orderBy = "up_result",
                        ranksOf = "up_result",
-                       topNodes = 20)
-
-all_table <- GenTable(up_GO_data, classicFisher = up_result,
-             classicKS = resultKS, elimKS = resultKS.elim,
-             orderBy = "elimKS", ranksOf = "classicFisher", topNodes = 10)
-
-pValue.classic <- score(resultKS)
-pValue.elim <- score(resultKS.elim)[names(pValue.classic)]
-gstat <- termStat(up_GO_data, names(pValue.classic))
-gSize <- gstat$Annotated / max(gstat$Annotated) * 4
-
-topGO::showSigOfNodes(up_GO_data, score(resultKS.elim), firstSigNodes = 5, useInfo = 'all')
+                       topNodes = 10)
 
 up_GO_filtered <- up_summary %>%
   mutate(GeneRatio = Significant/Annotated, weight01 = as.numeric(weight01)) %>%
@@ -87,3 +81,11 @@ up_GO_filtered <- up_summary %>%
 
 up_order_term <- up_GO_filtered %>% 
   pull(Term)
+
+up_GO_filtered %>% 
+  ggplot(aes(x= Term, y = GeneRatio, colour = weight01)) +
+  geom_col(width = 0.05) +
+  geom_point(size = 3) +
+  coord_flip() +
+  scale_x_discrete(limits = up_order_term) + 
+  scale_colour_gradient(low = "red", high = "blue")
