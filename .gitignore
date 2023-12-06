@@ -53,13 +53,14 @@ packrat/lib*/
 
 .venv
 
-sra_files
-sra_details/*.xml
+inputs/sra_files
+inputs/sra_details/*.xml
+inputs/test_sra_script
+inputs/Cd_exposure_STAR
 
 .vscode
 fasterq.tmp*
 
-test_sra_script
 *_star
 *.zip
-Cd_exposure_STAR
+
