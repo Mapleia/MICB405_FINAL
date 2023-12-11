@@ -57,9 +57,9 @@ shape_df_deseq2 <- function(df) {
   cd_frame <- pivoted_df %>% as.data.frame()
   rownames(cd_frame) <- cd_frame[,1]
   cd_frame<-cd_frame[,-c(1)]
-  
+
   dat_matrix<- as.matrix(cd_frame)
-  
+
   return (dat_matrix)
 }
 
